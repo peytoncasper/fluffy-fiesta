@@ -5,7 +5,7 @@ This directory is designed to showcase a potential bug when the token range is s
 ### Utilize this command to write 50,000 records to Cassandra with the example schema.
 `python token_range_test.py write`
 
-### Utilize this command to manually page through all records by scanning through the token range and requesting 50 records at a time.
+### Utilize this command to manually page through 40,000 records by scanning through the token range and requesting 50 records at a time.
 `python token_range_test.py read`
 
 ### Utilize this command to page through 40,000 records by using the native DSE Driver paging capability.
