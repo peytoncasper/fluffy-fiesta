@@ -3,16 +3,20 @@ from dse.cluster import ConsistencyLevel
 from cassandra.query import SimpleStatement
 import sys
 def main():
-    cluster = Cluster(['34.213.255.215'])
-    session = cluster.connect()
+    host = '127.0.0.1'
+
 
     # Insert 50,000 rows into Cassandra for this test
     if sys.argv[1] == "write":
-        for i in range(0, 50000):
+        cluster = Cluster([host])
+        session = cluster.connect()
+        for i in range(0, 40000):
             session.execute("INSERT INTO test.paging_test (last_id, description) VALUES (%s, %s)",(i, str(i)))
     # Pass in the read argument to manually scan the token range
     # 50 tokens at a time up until the limit of 40,000 records
     elif sys.argv[1] == "read":
+        cluster = Cluster([host])
+        session = cluster.connect()
         # Opens the results csv
         r_file = open("results.csv", "w")
         # Loop for N number of passes, this records the range N times and allows you to run decommissions/bootstrapping
@@ -32,6 +36,8 @@ def main():
     # Pass in the read_driver_paging argument to utilize the DSE Driver paging which will iteratively pull back
     # the total number of records requested until 40,000
     elif sys.argv[1] == "read_driver_paging":
+        cluster = Cluster([host])
+        session = cluster.connect()
         # Open results_driver_paging csv
         r_file = open("results_driver_paging.csv", "w")
         for i in range(0, 500):
@@ -54,7 +60,7 @@ def main():
 
     # Pass in the validate argument and this will read through the CSV generated, comparing line 0 to line N.
     # This function is designed to check for inconsistencies in the scans.
-    elif sys.argv[1] == "validate":
+    elif sys.argv[1] == "validate_length":
         r_file = open(sys.argv[2], "r")
         lines = r_file.readlines()
 
@@ -66,6 +72,19 @@ def main():
                 if lines[0][j] != lines[i][j]:
                     print("Token Fault Line 0 and Line " + str(i))
                     break
+    elif sys.argv[1] == "validate_numbers":
+        r_file = open(sys.argv[2], "r")
+        lines = r_file.readlines()
+
+        first_line = lines[0].split(",")
+        for i in range(1, len(lines)):
+            test_line = lines[i].split(",")
+            for j in range(0, len(first_line)):
+                if first_line[j] not in  test_line:
+                    print("Line " + str(i) + " Doesn't Contain " + first_line[j])
+            # for j in range(0, len(test_line)):
+            #     if test_line[j] not in  first_line:
+            #         print("Line 0 Doesn't Contain " + test_line[j])
 
         r_file.close()
 
